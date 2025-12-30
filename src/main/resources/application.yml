@@ -1,0 +1,61 @@
+server:
+  port: 8080
+  servlet:
+    context-path: /api
+
+spring:
+  application:
+    name: neoroute
+  
+  neo4j:
+    uri: bolt://localhost:7687
+    authentication:
+      username: neo4j
+      password: Y@ssine2003
+  
+  security:
+    user:
+      name: admin
+      password: admin
+
+  # Mail Configuration (GMAIL SMTP)
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: ${MAIL_USERNAME:aymenyassine301@gmail.com}
+    password: ${MAIL_PASSWORD:ipkn fvug babg eyey}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+            required: true
+
+
+# JWT Configuration
+jwt:
+  secret: 404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970
+  expiration: 86400000  # 24 hours in milliseconds
+  refresh-expiration: 604800000  # 7 days in milliseconds
+
+# Application Constants
+neoroute:
+  routing:
+    average-speed-kmh: 40  # Average delivery vehicle speed
+    max-stations-per-trip: 50  # Maximum stations for route optimization
+  
+  scoring:
+    on-time-weight: 0.4
+    efficiency-weight: 0.4
+    completion-weight: 0.2
+
+logging:
+  level:
+    com.neoroute.logistics: INFO
+    org.springframework.security: WARN
+    org.neo4j: WARN
+    org.neo4j.driver: WARN
+    org.springframework.data.neo4j: WARN
+  pattern:
+    console: "%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"

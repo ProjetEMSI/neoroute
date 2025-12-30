@@ -1,0 +1,42 @@
+{"properties": [
+  {
+    "name": "jwt.secret",
+    "type": "java.lang.String",
+    "description": "A description for 'jwt.secret'"
+  },
+  {
+    "name": "jwt.expiration",
+    "type": "java.lang.String",
+    "description": "A description for 'jwt.expiration'"
+  },
+  {
+    "name": "jwt.refresh-expiration",
+    "type": "java.lang.String",
+    "description": "A description for 'jwt.refresh-expiration'"
+  },
+  {
+    "name": "neoroute.routing.average-speed-kmh",
+    "type": "java.lang.String",
+    "description": "A description for 'neoroute.routing.average-speed-kmh'"
+  },
+  {
+    "name": "neoroute.routing.max-stations-per-trip",
+    "type": "java.lang.String",
+    "description": "A description for 'neoroute.routing.max-stations-per-trip'"
+  },
+  {
+    "name": "neoroute.scoring.on-time-weight",
+    "type": "java.lang.String",
+    "description": "A description for 'neoroute.scoring.on-time-weight'"
+  },
+  {
+    "name": "neoroute.scoring.efficiency-weight",
+    "type": "java.lang.String",
+    "description": "A description for 'neoroute.scoring.efficiency-weight'"
+  },
+  {
+    "name": "neoroute.scoring.completion-weight",
+    "type": "java.lang.String",
+    "description": "A description for 'neoroute.scoring.completion-weight'"
+  }
+]}

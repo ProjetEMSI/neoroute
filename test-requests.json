@@ -1,0 +1,307 @@
+{
+    "info": {
+        "name": "NeoRoute API Tests",
+        "description": "Collection de requêtes pour tester l'API NeoRoute",
+        "baseUrl": "http://localhost:8080/api"
+    },
+    "authentication": {
+        "note": "Après login, copiez le token et utilisez-le dans les requêtes protégées",
+        "header": "Authorization: Bearer <votre-token>"
+    },
+    "requests": {
+        "1_register_admin": {
+            "method": "POST",
+            "url": "{{baseUrl}}/auth/register",
+            "headers": {
+                "Content-Type": "application/json"
+            },
+            "body": {
+                "username": "admin",
+                "email": "admin@neoroute.com",
+                "password": "admin123",
+                "role": "ADMIN"
+            }
+        },
+        "2_register_driver": {
+            "method": "POST",
+            "url": "{{baseUrl}}/auth/register",
+            "headers": {
+                "Content-Type": "application/json"
+            },
+            "body": {
+                "username": "driver1",
+                "email": "driver1@neoroute.com",
+                "password": "driver123",
+                "role": "DRIVER"
+            }
+        },
+        "3_login_admin": {
+            "method": "POST",
+            "url": "{{baseUrl}}/auth/login",
+            "headers": {
+                "Content-Type": "application/json"
+            },
+            "body": {
+                "username": "admin",
+                "password": "admin123"
+            },
+            "response_example": {
+                "token": "eyJhbGciOiJIUzI1NiJ9...",
+                "tokenType": "Bearer",
+                "username": "admin",
+                "role": "ADMIN",
+                "userId": 1
+            }
+        },
+        "4_login_driver": {
+            "method": "POST",
+            "url": "{{baseUrl}}/auth/login",
+            "headers": {
+                "Content-Type": "application/json"
+            },
+            "body": {
+                "username": "driver1",
+                "password": "driver123"
+            }
+        },
+        "5_create_station_hub": {
+            "method": "POST",
+            "url": "{{baseUrl}}/admin/stations",
+            "headers": {
+                "Content-Type": "application/json",
+                "Authorization": "Bearer {{admin_token}}"
+            },
+            "body": {
+                "name": "Hub Central Casablanca",
+                "latitude": 33.5731,
+                "longitude": -7.5898
+            }
+        },
+        "6_create_station_rabat": {
+            "method": "POST",
+            "url": "{{baseUrl}}/admin/stations",
+            "headers": {
+                "Content-Type": "application/json",
+                "Authorization": "Bearer {{admin_token}}"
+            },
+            "body": {
+                "name": "Station Rabat",
+                "latitude": 34.0209,
+                "longitude": -6.8416
+            }
+        },
+        "7_create_station_marrakech": {
+            "method": "POST",
+            "url": "{{baseUrl}}/admin/stations",
+            "headers": {
+                "Content-Type": "application/json",
+                "Authorization": "Bearer {{admin_token}}"
+            },
+            "body": {
+                "name": "Station Marrakech",
+                "latitude": 31.6295,
+                "longitude": -7.9811
+            }
+        },
+        "8_create_station_tanger": {
+            "method": "POST",
+            "url": "{{baseUrl}}/admin/stations",
+            "headers": {
+                "Content-Type": "application/json",
+                "Authorization": "Bearer {{admin_token}}"
+            },
+            "body": {
+                "name": "Station Tanger",
+                "latitude": 35.7595,
+                "longitude": -5.8340
+            }
+        },
+        "9_create_station_fes": {
+            "method": "POST",
+            "url": "{{baseUrl}}/admin/stations",
+            "headers": {
+                "Content-Type": "application/json",
+                "Authorization": "Bearer {{admin_token}}"
+            },
+            "body": {
+                "name": "Station Fès",
+                "latitude": 34.0331,
+                "longitude": -5.0003
+            }
+        },
+        "10_list_stations": {
+            "method": "GET",
+            "url": "{{baseUrl}}/admin/stations",
+            "headers": {
+                "Authorization": "Bearer {{admin_token}}"
+            }
+        },
+        "11_list_active_stations_only": {
+            "method": "GET",
+            "url": "{{baseUrl}}/admin/stations?activeOnly=true",
+            "headers": {
+                "Authorization": "Bearer {{admin_token}}"
+            }
+        },
+        "12_create_trip": {
+            "method": "POST",
+            "url": "{{baseUrl}}/admin/trips",
+            "headers": {
+                "Content-Type": "application/json",
+                "Authorization": "Bearer {{admin_token}}"
+            },
+            "body": {
+                "name": "Tournée Nord Matin",
+                "startStationId": 1,
+                "requiredStationIds": [
+                    2,
+                    4,
+                    5
+                ]
+            },
+            "note": "Remplacez les IDs par ceux retournés lors de la création des stations"
+        },
+        "13_get_trip_details": {
+            "method": "GET",
+            "url": "{{baseUrl}}/admin/trips/1",
+            "headers": {
+                "Authorization": "Bearer {{admin_token}}"
+            },
+            "note": "Vous verrez la route optimisée avec distances et temps estimé"
+        },
+        "14_assign_trip_to_driver": {
+            "method": "POST",
+            "url": "{{baseUrl}}/admin/trips/1/assign",
+            "headers": {
+                "Content-Type": "application/json",
+                "Authorization": "Bearer {{admin_token}}"
+            },
+            "body": {
+                "driverId": 2
+            },
+            "note": "Utilisez l'ID du driver créé à l'étape 2"
+        },
+        "15_driver_get_assigned_trips": {
+            "method": "GET",
+            "url": "{{baseUrl}}/driver/trips/assigned",
+            "headers": {
+                "Authorization": "Bearer {{driver_token}}"
+            }
+        },
+        "16_driver_get_trip_details": {
+            "method": "GET",
+            "url": "{{baseUrl}}/driver/trips/1",
+            "headers": {
+                "Authorization": "Bearer {{driver_token}}"
+            }
+        },
+        "17_driver_start_trip": {
+            "method": "POST",
+            "url": "{{baseUrl}}/driver/trips/1/start",
+            "headers": {
+                "Authorization": "Bearer {{driver_token}}"
+            }
+        },
+        "18_driver_visit_station": {
+            "method": "POST",
+            "url": "{{baseUrl}}/driver/trips/1/visit/2",
+            "headers": {
+                "Authorization": "Bearer {{driver_token}}"
+            },
+            "note": "Remplacez '2' par l'ID de la station à marquer comme visitée"
+        },
+        "19_driver_complete_trip": {
+            "method": "POST",
+            "url": "{{baseUrl}}/driver/trips/1/complete",
+            "headers": {
+                "Authorization": "Bearer {{driver_token}}"
+            },
+            "note": "Complète le trajet et génère automatiquement le rapport"
+        },
+        "20_driver_get_profile": {
+            "method": "GET",
+            "url": "{{baseUrl}}/driver/profile",
+            "headers": {
+                "Authorization": "Bearer {{driver_token}}"
+            }
+        },
+        "21_driver_get_history": {
+            "method": "GET",
+            "url": "{{baseUrl}}/driver/profile/history",
+            "headers": {
+                "Authorization": "Bearer {{driver_token}}"
+            }
+        },
+        "22_admin_get_trip_reports": {
+            "method": "GET",
+            "url": "{{baseUrl}}/admin/reports/trips",
+            "headers": {
+                "Authorization": "Bearer {{admin_token}}"
+            }
+        },
+        "23_admin_get_driver_reports": {
+            "method": "GET",
+            "url": "{{baseUrl}}/admin/reports/trips?driverId=2",
+            "headers": {
+                "Authorization": "Bearer {{admin_token}}"
+            }
+        },
+        "24_admin_get_driver_statistics": {
+            "method": "GET",
+            "url": "{{baseUrl}}/admin/reports/drivers",
+            "headers": {
+                "Authorization": "Bearer {{admin_token}}"
+            }
+        },
+        "25_admin_get_system_summary": {
+            "method": "GET",
+            "url": "{{baseUrl}}/admin/reports/summary",
+            "headers": {
+                "Authorization": "Bearer {{admin_token}}"
+            }
+        },
+        "26_update_station": {
+            "method": "PUT",
+            "url": "{{baseUrl}}/admin/stations/1",
+            "headers": {
+                "Content-Type": "application/json",
+                "Authorization": "Bearer {{admin_token}}"
+            },
+            "body": {
+                "name": "Hub Central Casablanca - Modifié",
+                "latitude": 33.5731,
+                "longitude": -7.5898
+            }
+        },
+        "27_delete_station": {
+            "method": "DELETE",
+            "url": "{{baseUrl}}/admin/stations/1",
+            "headers": {
+                "Authorization": "Bearer {{admin_token}}"
+            },
+            "note": "Désactive la station (soft delete)"
+        },
+        "28_cancel_trip": {
+            "method": "PUT",
+            "url": "{{baseUrl}}/admin/trips/1/cancel",
+            "headers": {
+                "Authorization": "Bearer {{admin_token}}"
+            }
+        }
+    },
+    "curl_examples": {
+        "register": "curl -X POST http://localhost:8080/api/auth/register -H \"Content-Type: application/json\" -d '{\"username\":\"admin\",\"email\":\"admin@neoroute.com\",\"password\":\"admin123\",\"role\":\"ADMIN\"}'",
+        "login": "curl -X POST http://localhost:8080/api/auth/login -H \"Content-Type: application/json\" -d '{\"username\":\"admin\",\"password\":\"admin123\"}'",
+        "create_station": "curl -X POST http://localhost:8080/api/admin/stations -H \"Content-Type: application/json\" -H \"Authorization: Bearer YOUR_TOKEN\" -d '{\"name\":\"Hub Central\",\"latitude\":33.5731,\"longitude\":-7.5898}'",
+        "list_stations": "curl -X GET http://localhost:8080/api/admin/stations -H \"Authorization: Bearer YOUR_TOKEN\""
+    },
+    "notes": {
+        "1": "Assurez-vous que Neo4j est démarré sur bolt://localhost:7687",
+        "2": "Le mot de passe Neo4j configuré est: Y@ssine2003",
+        "3": "Commencez par créer un admin (étape 1), puis login (étape 3)",
+        "4": "Sauvegardez le token retourné et utilisez-le dans toutes les requêtes suivantes",
+        "5": "Créez plusieurs stations avant de créer un trajet",
+        "6": "L'algorithme optimisera automatiquement l'ordre des stations",
+        "7": "Le score du chauffeur est calculé automatiquement à la fin du trajet"
+    }
+}
