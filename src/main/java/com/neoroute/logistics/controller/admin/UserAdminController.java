@@ -74,9 +74,9 @@ public class UserAdminController {
     }
 
     @DeleteMapping("/{id}")
-    @Operation(summary = "Désactiver un utilisateur", description = "Bascule le statut actif/inactif d'un utilisateur. Les utilisateurs inactifs ne peuvent pas se connecter.")
-    public ResponseEntity<UserResponse> toggleUserStatus(@PathVariable Long id) {
-        User user = userService.toggleUserStatus(id);
+    @Operation(summary = "Désactiver un utilisateur", description = "Bascule le statut actif/inactif d'un utilisateur. Les utilisateurs inactifs ne peuvent pas se connecter. Un admin ne peut pas désactiver son propre compte.")
+    public ResponseEntity<UserResponse> toggleUserStatus(@PathVariable Long id, java.security.Principal principal) {
+        User user = userService.toggleUserStatus(id, principal.getName());
         return ResponseEntity.ok(DtoMapper.toUserResponse(user));
     }
 }

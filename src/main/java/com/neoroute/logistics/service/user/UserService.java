@@ -134,14 +134,23 @@ public class UserService {
 
     /**
      * Basculer le statut actif d'un utilisateur (activer/désactiver)
+     * Un admin ne peut pas désactiver son propre compte
      * 
-     * @param id ID de l'utilisateur
+     * @param id                    ID de l'utilisateur
+     * @param authenticatedUsername Nom d'utilisateur de l'admin authentifié
      * @return L'utilisateur avec le statut modifié
-     * @throws BusinessException si l'utilisateur n'existe pas
+     * @throws BusinessException si l'utilisateur n'existe pas ou si un admin tente
+     *                           de se désactiver
      */
     @Transactional
-    public User toggleUserStatus(Long id) {
+    public User toggleUserStatus(Long id, String authenticatedUsername) {
         User user = getUserById(id);
+
+        // Empêcher un admin de désactiver son propre compte
+        if (user.getUsername().equals(authenticatedUsername) && user.isActive()) {
+            throw new BusinessException("Vous ne pouvez pas désactiver votre propre compte");
+        }
+
         user.setActive(!user.isActive());
         user.setUpdatedAt(LocalDateTime.now());
 

@@ -80,6 +80,16 @@ public class StationService {
         stationRepository.save(station);
         log.info("Station désactivée : {}", id);
     }
+    /**
+     * Activer une station
+     */
+    @Transactional
+    public void activeStation(Long id){
+        Station station = getStationById(id);
+        station.setActive(true);
+        stationRepository.save(station);
+        log.info("Station activée : {}", id);
+    }
 
     /**
      * Récupérer une station par son ID

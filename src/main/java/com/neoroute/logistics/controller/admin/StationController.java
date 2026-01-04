@@ -67,6 +67,13 @@ public class StationController {
         return ResponseEntity.noContent().build();
     }
 
+    @PutMapping("/{id}/active")
+    @Operation(summary = "Activer une station", description = "Active une station (suppression logique). Elle sera utilisée pour les nouveaux trajets.")
+    public ResponseEntity<Void> activeStation(@PathVariable Long id) {
+        stationService.activeStation(id);
+        return ResponseEntity.noContent().build();
+    }
+
     @GetMapping("/{id}")
     @Operation(summary = "Récupérer une station", description = "Obtient les détails d'une station par son ID.")
     public ResponseEntity<StationResponse> getStation(@PathVariable Long id) {
