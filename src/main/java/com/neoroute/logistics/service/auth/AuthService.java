@@ -57,7 +57,6 @@ public class AuthService {
      * @throws BusinessException si le username ou l'email existe déjà
      */
     @Transactional
-    @SuppressWarnings("null")
     public User register(String username, String email, String password, Role role) {
         // Vérifier si le nom d'utilisateur existe déjà
         if (userRepository.findByUsername(username).isPresent()) {

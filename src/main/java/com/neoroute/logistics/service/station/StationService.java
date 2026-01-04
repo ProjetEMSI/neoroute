@@ -38,7 +38,6 @@ public class StationService {
      * @return La station créée
      */
     @Transactional
-    @SuppressWarnings("null")
     public Station createStation(String name, double latitude, double longitude) {
         validateCoordinates(latitude, longitude);
 
@@ -88,7 +87,6 @@ public class StationService {
      * @throws BusinessException si non trouvée
      */
     @Transactional(readOnly = true)
-    @SuppressWarnings("null")
     public Station getStationById(Long id) {
         return stationRepository.findById(id)
                 .orElseThrow(() -> new BusinessException("Station non trouvée avec l'id : " + id));

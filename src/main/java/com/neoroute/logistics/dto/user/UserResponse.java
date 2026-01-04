@@ -21,4 +21,6 @@ public class UserResponse {
     private boolean active;
     private Integer totalTrips;
     private Double averageScore;
+    private Integer completedDeliveries;
+    private Double totalDistance;
 }

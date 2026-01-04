@@ -17,7 +17,7 @@ Ce document détaille les endpoints de l'API NeoRoute pour l'intégration Front-
 
 Ces endpoints sont accessibles sans token.
 
-### 1.2 Connexion (Login)
+### 1.1 Connexion (Login)
 S'authentifier pour récupérer le token JWT.
 
 *   **URL** : `/auth/login`
@@ -43,11 +43,54 @@ S'authentifier pour récupérer le token JWT.
 
 ---
 
-## 2. Administration (Stations)
+## 2. Administration (Utilisateurs)
 
 Nécessite le rôle `ADMIN`.
 
-### 2.1 Liste des Stations
+### 2.1 Liste des Utilisateurs
+*   **URL** : `/admin/users`
+*   **Méthode** : `GET`
+*   **Réponse (200 OK)** : Liste de tous les utilisateurs (Admins et Chauffeurs).
+
+### 2.2 Créer un Utilisateur
+*   **URL** : `/admin/users`
+*   **Méthode** : `POST`
+*   **Body (JSON)** :
+    ```json
+    {
+      "username": "chauffeur1",
+      "email": "chauffeur1@neoroute.com",
+      "password": "password123",
+      "role": "DRIVER" // ou "ADMIN"
+    }
+    ```
+*   **Réponse (201 Created)**.
+
+### 2.3 Modifier un Utilisateur
+*   **URL** : `/admin/users/{id}`
+*   **Méthode** : `PUT`
+*   **Body (JSON)** :
+    ```json
+    {
+      "email": "newemail@example.com", // optionnel
+      "password": "newpassword",       // optionnel
+      "active": true                   // optionnel
+    }
+    ```
+
+### 2.4 Désactiver/Activer un Utilisateur
+*   **URL** : `/admin/users/{id}`
+*   **Méthode** : `DELETE`
+*   **Description** : Bascule le statut actif/inactif.
+*   **Réponse (200 OK)**.
+
+---
+
+## 3. Administration (Stations)
+
+Nécessite le rôle `ADMIN`.
+
+### 3.1 Liste des Stations
 *   **URL** : `/admin/stations`
 *   **Méthode** : `GET`
 *   **Paramètre (Optionnel)** : `?activeOnly=true` (par défaut `true`). Mettre `false` pour voir aussi les stations supprimées.
@@ -59,13 +102,12 @@ Nécessite le rôle `ADMIN`.
         "name": "Hub Central Casablanca",
         "latitude": 33.5731,
         "longitude": -7.5898,
-        "acive": true
-      },
-      ...
+        "active": true
+      }
     ]
     ```
 
-### 2.2 Créer une Station
+### 3.2 Créer une Station
 *   **URL** : `/admin/stations`
 *   **Méthode** : `POST`
 *   **Body (JSON)** :
@@ -76,25 +118,31 @@ Nécessite le rôle `ADMIN`.
       "longitude": -7.5898
     }
     ```
-*   **Réponse (201 Created)** : Retourne l'objet station créé avec son `id`.
+*   **Réponse (201 Created)**.
 
-### 2.3 Modifier une Station
+### 3.3 Modifier une Station
 *   **URL** : `/admin/stations/{id}`
 *   **Méthode** : `PUT`
 *   **Body (JSON)** : Idem création.
 
-### 2.4 Supprimer une Station (Soft Delete)
+### 3.4 Supprimer une Station (Soft Delete)
 *   **URL** : `/admin/stations/{id}`
 *   **Méthode** : `DELETE`
 *   **Réponse (204 No Content)**.
 
 ---
 
-## 3. Administration (Trajets / Trips)
+## 4. Administration (Trajets / Trips)
 
 Nécessite le rôle `ADMIN`.
 
-### 3.1 Créer un Trajet (Optimisation de Route)
+### 4.1 Lister les Trajets
+*   **URL** : `/admin/trips`
+*   **Méthode** : `GET`
+*   **Paramètre (Optionnel)** : `?status=CREATED` (ou `ASSIGNED`, `IN_PROGRESS`, `COMPLETED`, `CANCELLED`).
+*   **Réponse (200 OK)** : Liste des trajets.
+
+### 4.2 Créer un Trajet (Optimisation de Route)
 Planifie un trajet en spécifiant la station de départ et les stations à visiter. L'algorithme optimisera l'ordre.
 
 *   **URL** : `/admin/trips`
@@ -105,126 +153,124 @@ Planifie un trajet en spécifiant la station de départ et les stations à visit
       "name": "Tournée Nord Matin",
       "startStationId": 1,         // ID de la station de départ (Hub)
       "requiredStationIds": [      // IDs des stations à visiter
-          2,
-          4,
-          5
+          2, 4, 5
       ]
     }
     ```
-*   **Réponse (201 Created)** : Retourne le trajet créé avec l'ordre optimisé des stations, la distance estimée et la durée.
+*   **Réponse (201 Created)**.
 
-### 3.2 Détails d'un Trajet
+### 4.3 Détails d'un Trajet
 *   **URL** : `/admin/trips/{id}`
 *   **Méthode** : `GET`
-*   **Réponse (200 OK)** : Contient les détails du trajet, le statut (`PLANNED`, `IN_PROGRESS`, `COMPLETED`), et la liste ordonnée des étapes (`routeKeyPoints`).
+*   **Réponse (200 OK)**.
 
-### 3.3 Assigner un Chauffeur
+### 4.4 Modifier un Trajet
+MODIFIABLE SEULEMENT SI STATUT = `CREATED` ou `ASSIGNED`.
+*   **URL** : `/admin/trips/{id}`
+*   **Méthode** : `PUT`
+*   **Body (JSON)** :
+    ```json
+    {
+      "name": "Nouveau Nom",
+      "startStationId": 1,
+      "requiredStationIds": [2, 3]
+    }
+    ```
+
+### 4.5 Assigner un Chauffeur
 *   **URL** : `/admin/trips/{id}/assign`
 *   **Méthode** : `POST`
 *   **Body (JSON)** :
     ```json
     {
-      "driverId": 2  // ID de l'utilisateur (rôle DRIVER)
+      "driverId": 2
     }
     ```
-*   **Réponse (200 OK)**.
 
-### 3.4 Annuler un Trajet
+### 4.6 Annuler un Trajet
 *   **URL** : `/admin/trips/{id}/cancel`
 *   **Méthode** : `PUT`
 
 ---
 
-## 4. Espace Chauffeur (Driver)
+## 5. Espace Chauffeur (Driver)
 
 Nécessite le rôle `DRIVER`.
 
-### 4.1 Mes Trajets Assignés
+### 5.1 Mes Trajets Assignés
 *   **URL** : `/driver/trips/assigned`
 *   **Méthode** : `GET`
-*   **Réponse (200 OK)** : Liste des trajets assignés au chauffeur connecté.
+*   **Réponse (200 OK)** : Liste des trajets actifs (ASSIGNED, IN_PROGRESS).
 
-### 4.2 Démarrer un Trajet
+### 5.2 Détails d'un Trajet
+*   **URL** : `/driver/trips/{id}`
+*   **Méthode** : `GET`
+
+### 5.3 Démarrer un Trajet
 *   **URL** : `/driver/trips/{id}/start`
 *   **Méthode** : `POST`
-*   **Réponse (200 OK)** : Le statut du trajet passe à `IN_PROGRESS`.
+*   **Réponse (200 OK)** : Le statut passe à `IN_PROGRESS`.
 
-### 4.3 Valider une visite (Station)
+### 5.4 Valider une visite (Station)
 Indique que le chauffeur est arrivé à une station.
 
 *   **URL** : `/driver/trips/{tripId}/visit/{stationId}`
 *   **Méthode** : `POST`
-*   **Réponse (200 OK)** : Marque l'étape comme visitée.
+*   **Réponse (200 OK)**.
 
-### 4.4 Terminer le Trajet
+### 5.5 Terminer le Trajet
 *   **URL** : `/driver/trips/{id}/complete`
 *   **Méthode** : `POST`
-*   **Réponse (200 OK)** : Clôture le trajet, calcule le score du chauffeur et génère le rapport.
+*   **Réponse (200 OK)** : Clôture le trajet, calcule le score.
 
-### 4.5 Mon Profil et Statistiques
+### 5.6 Mon Profil
 *   **URL** : `/driver/profile`
 *   **Méthode** : `GET`
-*   **Réponse (200 OK)** : Informations du chauffeur, score global, nombre de livraisons.
+*   **Réponse (200 OK)** : Stats personnelles.
 
-### 4.6 Historique des Trajets
+### 5.7 Historique des Trajets
 *   **URL** : `/driver/profile/history`
 *   **Méthode** : `GET`
-*   **Réponse (200 OK)** : Liste des trajets passés.
 
 ---
 
-## 5. Rapports & Statistiques (Admin)
+## 6. Rapports & Statistiques (Admin)
 
 Nécessite le rôle `ADMIN`.
 
-### 5.1 Rapports de Trajets
+### 6.1 Rapports de Trajets
 *   **URL** : `/admin/reports/trips`
 *   **Méthode** : `GET`
-*   **Paramètres (Optionnels)** : `?driverId=X` pour filtrer par chauffeur.
-*   **Réponse (200 OK)** : Liste détaillée des performances par trajet (temps réel vs estimé, score).
+*   **Paramètres (Optionnels)** :
+    *   `driverId`: ID du chauffeur pour filtrer.
+    *   `startDate`: Date de début (ISO Date Time), ex: `2023-01-01T00:00:00`.
+    *   `endDate`: Date de fin.
+*   **Réponse (200 OK)** : Liste détaillée des performances par trajet.
 
-### 5.2 Statistiques des Chauffeurs
+### 6.2 Exporter en PDF
+*   **URL** : `/admin/reports/export/pdf`
+*   **Méthode** : `GET`
+*   **Paramètres (Optionnels)** : Idem ci-dessus (`driverId`, `startDate`, `endDate`).
+*   **Réponse (200 OK)** : Fichier binaire PDF.
+
+### 6.3 Statistiques des Chauffeurs
 *   **URL** : `/admin/reports/drivers`
 *   **Méthode** : `GET`
-*   **Réponse (200 OK)** : Classement et performance globale de chaque chauffeur.
+*   **Réponse (200 OK)** : Performance globale par chauffeur.
 
-### 5.3 Résumé Système
+### 6.4 Résumé Système
 *   **URL** : `/admin/reports/summary`
 *   **Méthode** : `GET`
-*   **Réponse (200 OK)** : Métriques globales (total km, total trajets, efficacité moyenne).
+*   **Réponse (200 OK)** : Métriques globales.
 
 ---
 
-## 6. Notifications en Temps Réel (WebSocket)
+## 7. Notifications en Temps Réel (WebSocket)
 
-Les chauffeurs peuvent recevoir des notifications en temps réel via WebSocket lorsqu'un trajet leur est assigné.
+### 7.1 Connexion WebSocket
+*   **URL** : `http://localhost:8080/ws` (Note: Endpoint SockJS)
+*   **Protocole** : STOMP over SockJS
 
-### 6.1 Connexion WebSocket
-*   **URL** : `ws://localhost:8080/api/ws`
-*   **Protocole** : STOMP over WebSocket / SockJS
-
-### 6.2 Abonnement aux Notifications
-Les chauffeurs doivent s'abonner à leur topic personnel :
+### 7.2 Abonnement
 *   **Topic** : `/topic/driver/{driverId}`
-*   **Exemple** : `/topic/driver/2`
-
-**Code JavaScript exemple** :
-```javascript
-const socket = new SockJS('http://localhost:8080/api/ws');
-const stompClient = Stomp.over(socket);
-
-stompClient.connect({}, function(frame) {
-  stompClient.subscribe('/topic/driver/' + driverId, function(message) {
-    console.log('Notification:', message.body);
-    // Afficher notification à l'utilisateur
-  });
-});
-```
-
-### 6.3 Format du Message
-Lorsqu'un trajet est assigné, le message WebSocket contient :
-```
-"Nouveau trajet assigné : [Nom du trajet]"
-```
-
-> **Note** : En parallèle, un email est également envoyé à l'adresse du chauffeur.
+*   **Message** : "Nouveau trajet assigné : [Nom du trajet]"

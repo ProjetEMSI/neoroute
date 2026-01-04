@@ -52,7 +52,6 @@ public class UserService {
      * @throws BusinessException si l'utilisateur n'existe pas
      */
     @Transactional(readOnly = true)
-    @SuppressWarnings("null")
     public User getUserById(Long id) {
         return userRepository.findById(id)
                 .orElseThrow(() -> new BusinessException("Utilisateur non trouvé avec l'ID: " + id));
@@ -66,7 +65,6 @@ public class UserService {
      * @throws BusinessException si le username ou l'email existe déjà
      */
     @Transactional
-    @SuppressWarnings("null")
     public User createUser(CreateUserRequest request) {
         // Vérifier si le nom d'utilisateur existe déjà
         if (userRepository.findByUsername(request.getUsername()).isPresent()) {

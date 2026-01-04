@@ -54,8 +54,10 @@ public class DriverProfileController {
                 .email(user.getEmail())
                 .role(user.getRole())
                 .active(user.isActive())
-                .totalTrips(user.getTotalTrips())
+                .totalTrips(tripService.countCompletedTripsForDriver(user.getId()))
                 .averageScore(user.getAverageScore())
+                .completedDeliveries(tripService.countCompletedTripsForDriver(user.getId()))
+                .totalDistance(tripService.calculateTotalDistanceForDriver(user.getId()))
                 .build();
 
         return ResponseEntity.ok(response);

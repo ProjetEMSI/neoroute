@@ -48,7 +48,6 @@ public class TripService {
      * @return Le trajet créé avec la route optimisée
      */
     @Transactional
-    @SuppressWarnings("null")
     public Trip createTrip(String tripName, Long startStationId, List<Long> requiredStationIds) {
         Station startStation = stationService.getStationById(startStationId);
 
@@ -107,7 +106,6 @@ public class TripService {
      * @return Le trajet mis à jour
      */
     @Transactional
-    @SuppressWarnings("null")
     public Trip assignTripToDriver(Long tripId, Long driverId) {
         Trip trip = getTripById(tripId);
 
@@ -243,7 +241,6 @@ public class TripService {
      * Récupérer un trajet par son ID
      */
     @Transactional(readOnly = true)
-    @SuppressWarnings("null")
     public Trip getTripById(Long id) {
         return tripRepository.findById(id)
                 .orElseThrow(() -> new BusinessException("Trajet non trouvé avec l'id : " + id));
@@ -272,5 +269,31 @@ public class TripService {
                 .filter(trip -> trip.getStatus() == TripStatus.ASSIGNED ||
                         trip.getStatus() == TripStatus.IN_PROGRESS)
                 .toList();
+    }
+
+    /**
+     * Compter le nombre de trajets terminés pour un chauffeur
+     *
+     * @param driverId ID du chauffeur
+     * @return Nombre de trajets terminés
+     */
+    @Transactional(readOnly = true)
+    public Integer countCompletedTripsForDriver(Long driverId) {
+        return tripRepository.findByAssignedDriverIdAndStatus(driverId, TripStatus.COMPLETED).size();
+    }
+
+    /**
+     * Calculer la distance totale parcourue par un chauffeur sur ses trajets
+     * terminés
+     *
+     * @param driverId ID du chauffeur
+     * @return Distance totale en km
+     */
+    @Transactional(readOnly = true)
+    public Double calculateTotalDistanceForDriver(Long driverId) {
+        return tripRepository.findByAssignedDriverIdAndStatus(driverId, TripStatus.COMPLETED)
+                .stream()
+                .mapToDouble(trip -> trip.getTotalDistance() != null ? trip.getTotalDistance() : 0.0)
+                .sum();
     }
 }

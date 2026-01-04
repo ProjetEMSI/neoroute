@@ -82,7 +82,6 @@ public class DriverScoreService {
      * @param newTripScore Score du nouveau trajet
      */
     @Transactional
-    @SuppressWarnings("null")
     public void updateDriverScore(Long driverId, double newTripScore) {
         User driver = userRepository.findById(driverId)
                 .orElseThrow(() -> new BusinessException("Chauffeur non trouvé"));

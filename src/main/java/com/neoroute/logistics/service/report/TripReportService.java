@@ -40,7 +40,6 @@ public class TripReportService {
      * @return Le rapport généré
      */
     @Transactional
-    @SuppressWarnings("null")
     public TripReport generateTripReport(Trip trip) {
         if (trip.getActualStartTime() == null || trip.getActualEndTime() == null) {
             throw new IllegalArgumentException("Le trajet doit avoir des heures de début et de fin");
@@ -160,12 +159,18 @@ public class TripReportService {
     }
 
     @Transactional(readOnly = true)
-    public List<TripReport> getReportsForDriver(Long driverId) {
+    public List<TripReport> getReportsForDriver(Long driverId, LocalDateTime start, LocalDateTime end) {
+        if (start != null && end != null) {
+            return reportRepository.findByDriverAndDateRange(driverId, start, end);
+        }
         return reportRepository.findByDriverId(driverId);
     }
 
     @Transactional(readOnly = true)
-    public List<TripReport> getAllReports() {
+    public List<TripReport> getAllReports(LocalDateTime start, LocalDateTime end) {
+        if (start != null && end != null) {
+            return reportRepository.findByDateRange(start, end);
+        }
         return reportRepository.findAll();
     }
 

@@ -85,7 +85,9 @@ public class SecurityConfig {
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.setAllowedOrigins(List.of(
                 "http://localhost:8081",
-                "https://29bjk0sf-8081.uks1.devtunnels.ms/"));
+                "https://29bjk0sf-8081.uks1.devtunnels.ms/",
+                "http://192.168.11.209:8081",
+                "http://localhost:8082/"));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("*"));
         configuration.setExposedHeaders(List.of("Authorization"));

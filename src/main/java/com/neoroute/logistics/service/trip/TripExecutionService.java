@@ -157,7 +157,6 @@ public class TripExecutionService {
     /**
      * Récupère le trajet et valide que le chauffeur est bien celui assigné
      */
-    @SuppressWarnings("null")
     private Trip getTripAndValidateDriver(Long tripId, Long driverId) {
         Trip trip = tripRepository.findById(tripId)
                 .orElseThrow(() -> new BusinessException("Trajet non trouvé avec l'id : " + tripId));
