@@ -6,7 +6,6 @@ package com.neoroute.logistics.util;
 public final class DistanceUtil {
 
     private DistanceUtil() {
-        // Prevent instantiation
     }
 
     /**

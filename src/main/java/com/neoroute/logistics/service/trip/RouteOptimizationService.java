@@ -16,12 +16,12 @@ import java.util.*;
  * graphes
  * 
  * <p>
- * Implémente l'algorithme "Greedy Nearest Neighbor" (Plus Proche Voisin) pour
- * approximer la solution du problème du voyageur de commerce (TSP).
+ * Implémente l'algorithme de Dijkstra pour trouver le chemin le plus court
+ * entre les stations dans le graphe.
  * </p>
  * 
  * @author NeoRoute Team
- * @version 1.0
+ * @version 2.0
  */
 @Service
 @RequiredArgsConstructor
@@ -31,8 +31,23 @@ public class RouteOptimizationService {
     private final DistanceService distanceService;
 
     /**
+     * Classe interne représentant un nœud dans la file de priorité de Dijkstra
+     */
+    @Data
+    @AllArgsConstructor
+    private static class DijkstraNode implements Comparable<DijkstraNode> {
+        private Station station;
+        private double distance;
+
+        @Override
+        public int compareTo(DijkstraNode other) {
+            return Double.compare(this.distance, other.distance);
+        }
+    }
+
+    /**
      * Optimiser l'itinéraire pour visiter toutes les stations requises
-     * Utilise une approche gloutonne pour une approximation efficace du TSP
+     * Utilise Dijkstra combiné avec une heuristique gloutonne pour le TSP
      * 
      * @param startStation     Station de départ
      * @param requiredStations Liste des stations à visiter obligatoirement
@@ -51,91 +66,201 @@ public class RouteOptimizationService {
                     "Trop de stations. Maximum autorisé : " + Constants.MAX_STATIONS_PER_TRIP);
         }
 
-        log.info("Optimisation de la route depuis {} avec {} stations requises",
+        log.info("Optimisation de la route avec Dijkstra depuis {} avec {} stations requises",
                 startStation.getName(), requiredStations.size());
+
+        // Construire la liste complète des stations (départ + requises)
+        List<Station> allStations = new ArrayList<>();
+        allStations.add(startStation);
+        allStations.addAll(requiredStations);
 
         List<Station> optimizedRoute = new ArrayList<>();
         List<Double> distances = new ArrayList<>();
 
         optimizedRoute.add(startStation);
-        distances.add(0.0); // La première station n'a pas de distance depuis la précédente
+        distances.add(0.0);
 
         Set<Long> visited = new HashSet<>();
         visited.add(startStation.getId());
 
-        Set<Long> requiredIds = new HashSet<>();
-        for (Station s : requiredStations) {
-            requiredIds.add(s.getId());
-        }
-
         Station currentStation = startStation;
         double totalDistance = 0.0;
 
-        // Approche Gloutonne du Plus Proche Voisin (Greedy Nearest Neighbor)
+        // Utiliser Dijkstra pour trouver le prochain nœud optimal à chaque étape
         while (visited.size() <= requiredStations.size()) {
-            Station nearestStation = null;
-            double nearestDistance = Double.MAX_VALUE;
+            // Exécuter Dijkstra depuis la station courante
+            Map<Long, Double> shortestDistances = dijkstra(currentStation, allStations);
 
-            // Trouver la station requise non visitée la plus proche
+            Station nextStation = null;
+            double minDistance = Double.MAX_VALUE;
+
+            // Trouver la station non visitée avec la plus courte distance
             for (Station candidate : requiredStations) {
                 if (!visited.contains(candidate.getId())) {
-                    double distance = distanceService.calculateDistance(currentStation, candidate);
-                    if (distance < nearestDistance) {
-                        nearestDistance = distance;
-                        nearestStation = candidate;
+                    Double dist = shortestDistances.get(candidate.getId());
+                    if (dist != null && dist < minDistance) {
+                        minDistance = dist;
+                        nextStation = candidate;
                     }
                 }
             }
 
-            if (nearestStation == null) {
+            if (nextStation == null) {
                 break; // Toutes les stations ont été visitées
             }
 
-            visited.add(nearestStation.getId());
-            optimizedRoute.add(nearestStation);
-            distances.add(nearestDistance);
-            totalDistance += nearestDistance;
-            currentStation = nearestStation;
+            visited.add(nextStation.getId());
+            optimizedRoute.add(nextStation);
+            distances.add(minDistance);
+            totalDistance += minDistance;
+            currentStation = nextStation;
 
-            log.debug("Station {} ajoutée à la route, distance depuis la précédente : {} km",
-                    nearestStation.getName(), nearestDistance);
+            log.debug("Station {} ajoutée via Dijkstra, distance : {} km",
+                    nextStation.getName(), minDistance);
         }
 
         long estimatedTime = distanceService.estimateTravelTime(totalDistance);
 
-        log.info("Optimisation terminée. Distance totale : {} km, Temps estimé : {} minutes",
+        log.info("Optimisation Dijkstra terminée. Distance totale : {} km, Temps estimé : {} minutes",
                 totalDistance, estimatedTime);
 
         return new RouteResult(optimizedRoute, distances, totalDistance, estimatedTime);
     }
 
     /**
-     * Trouver le chemin le plus court entre deux stations (simplifié)
+     * Algorithme de Dijkstra pour calculer les distances les plus courtes
+     * depuis une station source vers toutes les autres stations
      * 
-     * <p>
-     * Dans cette version simplifiée, nous utilisons la distance directe.
-     * Dans une version future avec Neo4j complet, cela utiliserait Dijkstra sur le
-     * graphe routier.
-     * </p>
+     * @param source      Station de départ
+     * @param allStations Liste de toutes les stations du graphe
+     * @return Map associant chaque ID de station à sa distance minimale depuis la
+     *         source
+     */
+    private Map<Long, Double> dijkstra(Station source, List<Station> allStations) {
+        // Map pour stocker les distances minimales
+        Map<Long, Double> distances = new HashMap<>();
+
+        // Initialiser toutes les distances à l'infini
+        for (Station station : allStations) {
+            distances.put(station.getId(), Double.MAX_VALUE);
+        }
+        distances.put(source.getId(), 0.0);
+
+        // File de priorité pour sélectionner le nœud avec la distance minimale
+        PriorityQueue<DijkstraNode> priorityQueue = new PriorityQueue<>();
+        priorityQueue.add(new DijkstraNode(source, 0.0));
+
+        // Ensemble des stations déjà traitées
+        Set<Long> processed = new HashSet<>();
+
+        while (!priorityQueue.isEmpty()) {
+            DijkstraNode currentNode = priorityQueue.poll();
+            Station current = currentNode.getStation();
+
+            // Ignorer si déjà traité
+            if (processed.contains(current.getId())) {
+                continue;
+            }
+            processed.add(current.getId());
+
+            // Explorer tous les voisins (dans un graphe complet, tous les autres nœuds)
+            for (Station neighbor : allStations) {
+                if (neighbor.getId().equals(current.getId()) || processed.contains(neighbor.getId())) {
+                    continue;
+                }
+
+                // Calculer la distance entre la station courante et le voisin
+                double edgeWeight = distanceService.calculateDistance(current, neighbor);
+                double newDistance = distances.get(current.getId()) + edgeWeight;
+
+                // Si on trouve un chemin plus court, mettre à jour
+                if (newDistance < distances.get(neighbor.getId())) {
+                    distances.put(neighbor.getId(), newDistance);
+                    priorityQueue.add(new DijkstraNode(neighbor, newDistance));
+                }
+            }
+        }
+
+        return distances;
+    }
+
+    /**
+     * Trouver le chemin le plus court entre deux stations en utilisant Dijkstra
      * 
      * @param start       Station de départ
      * @param end         Station d'arrivée
-     * @param allStations Liste de toutes les stations disponibles (pour le contexte
-     *                    de graphe)
-     * @return Résultat du chemin le plus court
+     * @param allStations Liste de toutes les stations disponibles
+     * @return Résultat du chemin le plus court avec la liste des stations
+     *         intermédiaires
      */
     public PathResult findShortestPath(Station start, Station end, List<Station> allStations) {
-        // Pour la simplicité, nous utilisons la distance directe (vol d'oiseau
-        // amélioré)
-        // Dans un système de production, cela utiliserait les capacités de graphe de
-        // Neo4j
-        // pour trouver le chemin réel à travers le réseau routier
+        log.info("Recherche du chemin le plus court avec Dijkstra de {} à {}",
+                start.getName(), end.getName());
 
-        double distance = distanceService.calculateDistance(start, end);
-        List<Station> path = Arrays.asList(start, end);
-        long time = distanceService.estimateTravelTime(distance);
+        // Map pour stocker les distances minimales
+        Map<Long, Double> distances = new HashMap<>();
+        // Map pour stocker le prédécesseur de chaque nœud (pour reconstruire le chemin)
+        Map<Long, Station> predecessors = new HashMap<>();
 
-        return new PathResult(path, distance, time);
+        // Initialiser toutes les distances à l'infini
+        for (Station station : allStations) {
+            distances.put(station.getId(), Double.MAX_VALUE);
+        }
+        distances.put(start.getId(), 0.0);
+
+        // File de priorité pour Dijkstra
+        PriorityQueue<DijkstraNode> priorityQueue = new PriorityQueue<>();
+        priorityQueue.add(new DijkstraNode(start, 0.0));
+
+        Set<Long> processed = new HashSet<>();
+
+        while (!priorityQueue.isEmpty()) {
+            DijkstraNode currentNode = priorityQueue.poll();
+            Station current = currentNode.getStation();
+
+            if (processed.contains(current.getId())) {
+                continue;
+            }
+            processed.add(current.getId());
+
+            // Si on a atteint la destination, on peut arrêter
+            if (current.getId().equals(end.getId())) {
+                break;
+            }
+
+            // Explorer les voisins
+            for (Station neighbor : allStations) {
+                if (neighbor.getId().equals(current.getId()) || processed.contains(neighbor.getId())) {
+                    continue;
+                }
+
+                double edgeWeight = distanceService.calculateDistance(current, neighbor);
+                double newDistance = distances.get(current.getId()) + edgeWeight;
+
+                if (newDistance < distances.get(neighbor.getId())) {
+                    distances.put(neighbor.getId(), newDistance);
+                    predecessors.put(neighbor.getId(), current);
+                    priorityQueue.add(new DijkstraNode(neighbor, newDistance));
+                }
+            }
+        }
+
+        // Reconstruire le chemin depuis la destination vers la source
+        List<Station> path = new ArrayList<>();
+        Station current = end;
+
+        while (current != null) {
+            path.add(0, current); // Ajouter au début pour avoir l'ordre correct
+            current = predecessors.get(current.getId());
+        }
+
+        double totalDistance = distances.get(end.getId());
+        long estimatedTime = distanceService.estimateTravelTime(totalDistance);
+
+        log.info("Chemin trouvé avec Dijkstra : {} stations, distance : {} km",
+                path.size(), totalDistance);
+
+        return new PathResult(path, totalDistance, estimatedTime);
     }
 
     /**
@@ -163,8 +288,11 @@ public class RouteOptimizationService {
     @Data
     @AllArgsConstructor
     public static class PathResult {
+        /** Chemin complet avec toutes les stations intermédiaires */
         private List<Station> path;
+        /** Distance totale du chemin en km */
         private double distance;
+        /** Temps estimé en minutes */
         private long estimatedTimeMinutes;
     }
 }
